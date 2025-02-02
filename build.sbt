@@ -39,7 +39,7 @@ val dependencies = Seq(
   "dev.zio"                       %% "zio-config-typesafe"               % zioConfigVersion,
   "io.getquill"                   %% "quill-jdbc-zio"                    % "4.8.6",
   "org.postgresql"                 % "postgresql"                        % "42.7.5",
-  "org.flywaydb"                   % "flyway-core"                       % "11.2.0",
+  "org.flywaydb"                   % "flyway-core"                       % "11.3.0",
   "io.github.scottweaver"         %% "zio-2-0-testcontainers-postgresql" % "0.10.0",
   "dev.zio"                       %% "zio-prelude"                       % "1.0.0-RC37",
   "com.auth0"                      % "java-jwt"                          % "4.4.0",
@@ -55,8 +55,7 @@ lazy val foundations = (project in file("modules/foundations"))
 lazy val server = (project in file("modules/server"))
   .settings(
     libraryDependencies ++= dependencies
-    )
-
+  )
 
 lazy val root = (project in file("."))
   .settings(
