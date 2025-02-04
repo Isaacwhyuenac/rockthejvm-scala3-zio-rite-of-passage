@@ -1,7 +1,10 @@
 package com.rockthejvm.reviewboard
 
 import com.rockthejvm.reviewboard.http.HttpApi
-import com.rockthejvm.reviewboard.services.CompanyService
+import com.rockthejvm.reviewboard.repositories.{CompanyRepositoryLive, Repository}
+import com.rockthejvm.reviewboard.services.{CompanyService, CompanyServiceLive}
+import io.getquill.SnakeCase
+import io.getquill.jdbczio.Quill
 import sttp.tapir.server.ziohttp.{ZioHttpInterpreter, ZioHttpServerOptions}
 import zio.http.Server
 import zio.{Scope, ZIO, ZIOAppArgs, ZIOAppDefault}
@@ -20,7 +23,13 @@ object Application extends ZIOAppDefault {
   override def run: ZIO[Any with ZIOAppArgs with Scope, Any, Any] =
     serverProgram.provide(
       Server.default,
-      CompanyService.layer
+ 
+      Repository.dataLayer,
+      // services
+      CompanyServiceLive.layer,
+      
+      // repositories
+      CompanyRepositoryLive.layer,
     )
 
 }
