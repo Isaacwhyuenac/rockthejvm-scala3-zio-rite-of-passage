@@ -2,9 +2,10 @@ package com.rockthejvm.reviewboard.http.controllers
 
 import com.rockthejvm.reviewboard.domain.data.Company
 import com.rockthejvm.reviewboard.http.requests.CreateCompanyRequest
+import com.rockthejvm.reviewboard.services.CompanyService
 import com.rockthejvm.reviewboard.syntax.assert
 import sttp.client3.{basicRequest, UriContext}
-import zio.{Scope, Task, ZIO}
+import zio.{Scope, Task, ZIO, ZLayer}
 import zio.json.{DecoderOps, EncoderOps}
 import zio.test.{assertZIO, Assertion, Spec, TestEnvironment, ZIOSpecDefault}
 import sttp.tapir.server.stub.TapirStubInterpreter
@@ -16,6 +17,25 @@ import sttp.tapir.ztapir.RIOMonadError
 object CompanyControllerSpec extends ZIOSpecDefault {
 
   private given zioMonad: sttp.monad.MonadError[zio.Task] = RIOMonadError[Any]
+
+  val rockthejvm = Company(1, "rock-the-jvm", "Rock the JVM", "rockthejvm.com")
+
+  private val serviceStub = new CompanyService {
+    override def create(req: CreateCompanyRequest): Task[Company] =
+      ZIO.succeed(rockthejvm)
+
+    override def getAll(): Task[List[Company]] = ZIO.succeed(List(rockthejvm))
+
+    override def getById(id: Long): Task[Option[Company]] = ZIO.succeed {
+      if (id == rockthejvm.id) Some(rockthejvm)
+      else None
+    }
+
+    override def getBySlug(slug: String): Task[Option[Company]] = ZIO.succeed {
+      if (slug == rockthejvm.slug) Some(rockthejvm)
+      else None
+    }
+  }
 
   private def backendStubZIO(endpointFn: CompanyController => ServerEndpoint[Any, Task]) =
     for {
@@ -31,7 +51,7 @@ object CompanyControllerSpec extends ZIOSpecDefault {
 
   override def spec: Spec[TestEnvironment with Scope, Any] = suite("CompanyControllerSpec")(
     test("post company") {
-      val program: ZIO[Any, Throwable, Either[String, String]] = for {
+      val program = for {
         backendStub <- backendStubZIO(_.create)
 
         // run client request
@@ -54,7 +74,7 @@ object CompanyControllerSpec extends ZIOSpecDefault {
       // run request
       // inspect response
 
-      val program: ZIO[Any, Throwable, Either[String, String]] = for {
+      val program = for {
         backendStub <- backendStubZIO(_.getAll)
         // run client request
         response <- basicRequest
@@ -66,7 +86,7 @@ object CompanyControllerSpec extends ZIOSpecDefault {
         Assertion.assertion("inspect http response from getAll") { respBody =>
           respBody.toOption
             .flatMap(_.fromJson[List[Company]].toOption) // Option[List[Company]]
-            .contains(List.empty)
+            .contains(List(rockthejvm))
         }
       )
     },
@@ -76,12 +96,12 @@ object CompanyControllerSpec extends ZIOSpecDefault {
       // run request
       // inspect response
 
-      val program: ZIO[Any, Throwable, Either[String, String]] = for {
+      val program = for {
         backendStub <- backendStubZIO(_.getById)
 
         // run client request
         response <- basicRequest
-          .get(uri"/company/1")
+          .get(uri"/companies/1")
           .send(backendStub)
       } yield response.body
 
@@ -89,9 +109,11 @@ object CompanyControllerSpec extends ZIOSpecDefault {
         Assertion.assertion("inspect http response from getAll") { respBody =>
           respBody.toOption
             .flatMap(_.fromJson[Company].toOption) // Option[Company]
-            .isEmpty
+            .contains(rockthejvm)
         }
       )
     }
   )
+    .provide(ZLayer.succeed(serviceStub))
+
 }
