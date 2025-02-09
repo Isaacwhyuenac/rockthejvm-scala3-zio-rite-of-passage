@@ -37,7 +37,7 @@ class CompanyController private (companyService: CompanyService) extends BaseCon
 
 object CompanyController {
 
-  val makeZIO = for {
+  val makeZIO: ZIO[CompanyService, Nothing, CompanyController] = for {
     companyService <- ZIO.service[CompanyService]
   } yield new CompanyController(companyService)
 

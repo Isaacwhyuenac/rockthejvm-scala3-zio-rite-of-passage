@@ -13,5 +13,5 @@ class HealthController private extends BaseController with  HealthEndpoint {
 }
 
 object HealthController {
-  val makeZIO = ZIO.succeed(new HealthController)
+  val makeZIO: ZIO[Any, Nothing, HealthController] = ZIO.succeed(new HealthController)
 }
