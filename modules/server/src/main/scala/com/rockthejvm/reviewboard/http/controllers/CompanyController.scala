@@ -7,28 +7,26 @@ import com.rockthejvm.reviewboard.services.CompanyService
 import sttp.tapir.server.ServerEndpoint
 import zio.{Task, ZIO}
 
-import scala.collection.mutable
-
 class CompanyController private (companyService: CompanyService) extends BaseController with CompanyEndpoints {
 
   // create
-  val create: ServerEndpoint[Any, Task] = createEndpoint.serverLogicSuccess { (req: CreateCompanyRequest) =>
-    companyService.create(req)
+  val create: ServerEndpoint[Any, Task] = createEndpoint.serverLogic { (req: CreateCompanyRequest) =>
+    companyService.create(req).either
   }
 
   // getAll
-  val getAll: ServerEndpoint[Any, Task] = getAllEndpoint.serverLogicSuccess { _ =>
-    companyService.getAll()
+  val getAll: ServerEndpoint[Any, Task] = getAllEndpoint.serverLogic { _ =>
+    companyService.getAll().either
   }
 
   // getById
-  val getById: ServerEndpoint[Any, Task] = getByIdEndpoint.serverLogicSuccess { (id: String) =>
+  val getById: ServerEndpoint[Any, Task] = getByIdEndpoint.serverLogic { (id: String) =>
     ZIO
       .attempt(id.toLong)
       .flatMap(companyService.getById)
       .catchSome { case _: NumberFormatException =>
         companyService.getBySlug(id)
-      }
+      }.either
   }
 
   override val routes: List[ServerEndpoint[Any, Task]] = List(create, getAll, getById)

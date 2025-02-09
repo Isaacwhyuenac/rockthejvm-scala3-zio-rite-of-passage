@@ -6,10 +6,13 @@ import sttp.tapir.server.ServerEndpoint.Full
 import zio.{Task, ZIO}
 
 class HealthController private extends BaseController with  HealthEndpoint {
-  val health: Full[Unit, Unit, Unit, Unit, String, Any, Task] = healthEndpoint
+  val health = healthEndpoint
     .serverLogicSuccess[Task](_ => ZIO.succeed("All good"))
 
-  override val routes: List[ServerEndpoint[Any, Task]] = List(health)
+  private val errorRoute = errorEndpoint
+    .serverLogic[Task](_ => ZIO.fail(new RuntimeException("Error!")).either) // ZIO[R, Nothing, Either[Throwable, A]]
+
+  override val routes: List[ServerEndpoint[Any, Task]] = List(health, errorRoute)
 }
 
 object HealthController {
