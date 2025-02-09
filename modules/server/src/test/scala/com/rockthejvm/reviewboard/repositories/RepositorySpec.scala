@@ -7,11 +7,13 @@ import zio.{ZIO, ZLayer}
 import javax.sql.DataSource
 
 trait RepositorySpec {
+  val sqlScript: String
+
   // test containers
   // spawn a Postgres instance on Docker just for the test
   def createPostgres() = {
     val container: PostgreSQLContainer[Nothing] = PostgreSQLContainer("postgres")
-      .withInitScript("sql/companies.sql")
+      .withInitScript(sqlScript)
     container.start()
     container
   }

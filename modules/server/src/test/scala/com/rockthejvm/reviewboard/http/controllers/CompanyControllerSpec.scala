@@ -4,21 +4,21 @@ import com.rockthejvm.reviewboard.domain.data.Company
 import com.rockthejvm.reviewboard.http.requests.CreateCompanyRequest
 import com.rockthejvm.reviewboard.services.CompanyService
 import com.rockthejvm.reviewboard.syntax.assert
-import sttp.client3.{basicRequest, UriContext}
+import com.rockthejvm.reviewboard.testdata.CompanyTestDataSpec
+import sttp.client3.{SttpBackend, UriContext, basicRequest}
 import zio.{Scope, Task, ZIO, ZLayer}
 import zio.json.{DecoderOps, EncoderOps}
-import zio.test.{assertZIO, Assertion, Spec, TestEnvironment, ZIOSpecDefault}
+import zio.test.{Assertion, Spec, TestEnvironment, ZIOSpecDefault, assertZIO}
 import sttp.tapir.server.stub.TapirStubInterpreter
 import sttp.client3.testing.SttpBackendStub
 import sttp.monad.MonadError
 import sttp.tapir.server.ServerEndpoint
 import sttp.tapir.ztapir.RIOMonadError
 
-object CompanyControllerSpec extends ZIOSpecDefault {
+object CompanyControllerSpec extends ZIOSpecDefault with CompanyTestDataSpec {
 
+  // requirement for `backendStubZIO` to work
   private given zioMonad: sttp.monad.MonadError[zio.Task] = RIOMonadError[Any]
-
-  val rockthejvm = Company(1, "rock-the-jvm", "Rock the JVM", "rockthejvm.com")
 
   private val serviceStub = new CompanyService {
     override def create(req: CreateCompanyRequest): Task[Company] =
@@ -37,7 +37,9 @@ object CompanyControllerSpec extends ZIOSpecDefault {
     }
   }
 
-  private def backendStubZIO(endpointFn: CompanyController => ServerEndpoint[Any, Task]) =
+  private def backendStubZIO(
+      endpointFn: CompanyController => ServerEndpoint[Any, Task]
+  ): ZIO[CompanyService, Nothing, SttpBackend[Task, Any]] =
     for {
       /// create the controller
       companyController <- CompanyController.makeZIO

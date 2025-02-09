@@ -45,7 +45,7 @@ val dependencies = Seq(
   "com.auth0"                      % "java-jwt"                          % "4.4.0",
   "com.sun.mail"                   % "javax.mail"                        % javaMailVersion,
   "com.stripe"                     % "stripe-java"                       % stripeVersion
-)
+) ++ Dependencies.openTelemetry ++ Dependencies.zioMetrics
 
 lazy val foundations = (project in file("modules/foundations"))
   .settings(

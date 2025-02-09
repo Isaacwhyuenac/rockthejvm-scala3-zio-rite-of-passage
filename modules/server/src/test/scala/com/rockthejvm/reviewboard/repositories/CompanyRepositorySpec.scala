@@ -1,16 +1,14 @@
 package com.rockthejvm.reviewboard.repositories
 
 import com.rockthejvm.reviewboard.domain.data.Company
-import org.postgresql.ds.PGSimpleDataSource
-import org.testcontainers.containers.PostgreSQLContainer
+import com.rockthejvm.reviewboard.testdata.CompanyTestDataSpec
 import zio.{Scope, ZIO, ZLayer}
-import zio.test.{assertZIO, Assertion, Gen, Spec, TestEnvironment, ZIOSpecDefault}
+import zio.test.{assertZIO, Assertion, Spec, TestEnvironment, ZIOSpecDefault}
 
 import java.sql.SQLException
 import javax.sql.DataSource
 
-object CompanyRepositorySpec extends ZIOSpecDefault with RepositorySpec {
-  private val rtjvm = Company(1, "rock-the-jvm", "Rock the JVM", "rockthejvm.com")
+object CompanyRepositorySpec extends ZIOSpecDefault with RepositorySpec with CompanyTestDataSpec {
 
   private def genString = scala.util.Random.alphanumeric.take(10).mkString
   private def genCompany(): Company =
@@ -21,12 +19,14 @@ object CompanyRepositorySpec extends ZIOSpecDefault with RepositorySpec {
       url = genString
     )
 
+  override val sqlScript: String = "sql/companies.sql"
+
   override def spec: Spec[TestEnvironment with Scope, Any] =
     suite("CompanyRepositorySpec")(
       test("create a company") {
         val program = for {
           repo    <- ZIO.service[CompanyRepository]
-          company <- repo.create(rtjvm)
+          company <- repo.create(rockthejvm)
         } yield company
 
         assertZIO(program)(
@@ -39,8 +39,8 @@ object CompanyRepositorySpec extends ZIOSpecDefault with RepositorySpec {
       test("create a duplicate should error") {
         val program = for {
           repo  <- ZIO.service[CompanyRepository]
-          _     <- repo.create(rtjvm)
-          error <- repo.create(rtjvm).flip
+          _     <- repo.create(rockthejvm)
+          error <- repo.create(rockthejvm).flip
         } yield error
 
         assertZIO(program)(
@@ -52,7 +52,7 @@ object CompanyRepositorySpec extends ZIOSpecDefault with RepositorySpec {
       test("get by id and slug") {
         val program = for {
           repo    <- ZIO.service[CompanyRepository]
-          company <- repo.create(rtjvm)
+          company <- repo.create(rockthejvm)
           byId    <- repo.getById(1)
           bySlug  <- repo.getBySlug("rock-the-jvm")
         } yield (company, byId, bySlug)
@@ -66,7 +66,7 @@ object CompanyRepositorySpec extends ZIOSpecDefault with RepositorySpec {
       test("update a company") {
         val program = for {
           repo        <- ZIO.service[CompanyRepository]
-          company     <- repo.create(rtjvm)
+          company     <- repo.create(rockthejvm)
           updated     <- repo.update(company.id, _.copy(name = "Rock the JVM 2"))
           fetchedById <- repo.getById(company.id)
         } yield (updated, fetchedById)
@@ -80,7 +80,7 @@ object CompanyRepositorySpec extends ZIOSpecDefault with RepositorySpec {
       test("delete a company") {
         val program = for {
           repo        <- ZIO.service[CompanyRepository]
-          company     <- repo.create(rtjvm)
+          company     <- repo.create(rockthejvm)
           _           <- repo.delete(company.id)
           fetchedById <- repo.getById(company.id)
         } yield fetchedById
@@ -110,6 +110,5 @@ object CompanyRepositorySpec extends ZIOSpecDefault with RepositorySpec {
       dataSourceLayer,
       Scope.default
     )
-
 
 }

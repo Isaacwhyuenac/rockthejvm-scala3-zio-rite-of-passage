@@ -58,8 +58,8 @@ class CompanyRepositoryLive private (quill: Quill.Postgres[SnakeCase]) extends C
             .delete
             .returning(company => company)}
         } yield Some(company)
-    
-  
+
+
 
   override def getById(id: Long): Task[Option[Company]] =
     run {

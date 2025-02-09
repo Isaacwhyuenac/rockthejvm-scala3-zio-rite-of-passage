@@ -11,3 +11,16 @@ services:
       - "POSTGRES_PASSWORD=docker"
     ports:
       - "5432:5432"
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.65.0
+    environment:
+      - COLLECTOR_ZIPKIN_HOST_PORT=9411
+      - COLLECTOR_OTLP_ENABLED=true
+    ports:
+      - 4317:4317 # otel.grpc
+      - 4318:4318 # otel.http
+      - 9411:9411 # zipkin
+      - 14250:14250 # model.proto over thrift
+      - 14268:14268 # jaeger.thrift
+      - 16686:16686 # web
