@@ -2,7 +2,7 @@ package com.rockthejvm.reviewboard.repositories
 
 import org.postgresql.ds.PGSimpleDataSource
 import org.testcontainers.containers.PostgreSQLContainer
-import zio.{ZIO, ZLayer}
+import zio.{Scope, ZIO, ZLayer}
 
 import javax.sql.DataSource
 
@@ -11,7 +11,7 @@ trait RepositorySpec {
 
   // test containers
   // spawn a Postgres instance on Docker just for the test
-  def createPostgres() = {
+  def createPostgres(): PostgreSQLContainer[Nothing] = {
     val container: PostgreSQLContainer[Nothing] = PostgreSQLContainer("postgres")
       .withInitScript(sqlScript)
     container.start()
@@ -27,7 +27,7 @@ trait RepositorySpec {
     datasource
   }
   // use the DataSource to create a Quill instance
-  val dataSourceLayer = ZLayer {
+  val dataSourceLayer: ZLayer[Any & Scope, Throwable, DataSource] = ZLayer {
     for {
       container <- ZIO.acquireRelease(ZIO.attempt(createPostgres()))(container =>
         ZIO.attempt(container.stop()).ignoreLogged

@@ -118,7 +118,7 @@ object ReviewControllerSpec extends ZIOSpecDefault with ReviewTestDataSpec {
             .send(backendStub)
         } yield assertTrue(
           response.body.toOption.flatMap(_.fromJson[List[Review]].toOption).contains(List(goodReview)) &&
-            responseNotFound.body.toOption.flatMap(_.fromJson[List[Review]].toOption).isEmpty
+            responseNotFound.body.toOption.flatMap(_.fromJson[List[Review]].toOption).contains(List())
         )
       }
     ).provide(ZLayer.succeed(serviceStub))

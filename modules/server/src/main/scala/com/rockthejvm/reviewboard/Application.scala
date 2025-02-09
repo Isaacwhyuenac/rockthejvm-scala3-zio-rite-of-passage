@@ -45,8 +45,8 @@ object Application extends ZIOAppDefault {
 
       // OTEL
       opentelemetry.OpenTelemetry.global,
-      opentelemetry.OpenTelemetry.tracing(instrumentationScopeName),
-      opentelemetry.OpenTelemetry.contextJVM,
+//      opentelemetry.OpenTelemetry.tracing(instrumentationScopeName),
+//      opentelemetry.OpenTelemetry.contextJVM,
 
       // Metrics
       ZLayer.succeed(new PrometheusMeterRegistry(PrometheusConfig.DEFAULT)),

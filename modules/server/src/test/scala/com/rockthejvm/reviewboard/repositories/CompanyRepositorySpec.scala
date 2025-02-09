@@ -7,6 +7,7 @@ import zio.test.{assertZIO, Assertion, Spec, TestEnvironment, ZIOSpecDefault}
 
 import java.sql.SQLException
 import javax.sql.DataSource
+import scala.annotation.nowarn
 
 object CompanyRepositorySpec extends ZIOSpecDefault with RepositorySpec with CompanyTestDataSpec {
 
@@ -49,6 +50,7 @@ object CompanyRepositorySpec extends ZIOSpecDefault with RepositorySpec with Com
           }
         )
       },
+
       test("get by id and slug") {
         val program = for {
           repo    <- ZIO.service[CompanyRepository]
