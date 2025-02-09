@@ -1,0 +1,5 @@
+CREATE TABLE IF NOT EXISTS users (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    email TEXT NOT NULL,
+    hashedPassword TEXT NOT NULL
+);

@@ -9,7 +9,7 @@ import zio.durationLong
 
 import java.time.Instant
 
-object ReviewRepositoryTestDataSpec extends ZIOSpecDefault with RepositorySpec with ReviewTestDataSpec {
+object ReviewRepositorySpec extends ZIOSpecDefault with RepositorySpec with ReviewTestDataSpec {
 
   override val sqlScript: String = "sql/reviews.sql"
   override def spec: Spec[TestEnvironment with Scope, Any] =
