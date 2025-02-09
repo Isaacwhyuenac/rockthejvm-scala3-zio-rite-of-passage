@@ -4,7 +4,7 @@ import com.auth0.jwt.JWTVerifier.BaseVerification
 import com.auth0.jwt.algorithms.Algorithm
 import com.rockthejvm.reviewboard.config.JWTConfig
 import com.rockthejvm.reviewboard.domain.data.{User, UserID, UserToken}
-import zio.{Clock, Task, ZIO, ZLayer}
+import zio.{Task, ZIO, ZLayer}
 
 trait JWTService {
   def createToken(user: User): Task[UserToken]

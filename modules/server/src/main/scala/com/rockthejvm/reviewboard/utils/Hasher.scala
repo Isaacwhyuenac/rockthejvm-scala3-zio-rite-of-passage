@@ -31,9 +31,9 @@ object Hasher {
   }
 
   // string + salted + nIteration PBKDF2
-  def hashPassword(password: String): String = {
+  def generateHash(password: String): String = {
     val rng  = new SecureRandom()
-    val salt = new Array[Byte](SALT_BYTE_LENGTH)
+    val salt = Array.ofDim[Byte](SALT_BYTE_LENGTH)
 
     rng.nextBytes(salt) // generate 24 random bytes
     val hashBytes = pbkdf2(password.toCharArray, salt, PBDKF2_ITERATIONS, HASH_BYTE_LENGTH)

@@ -7,7 +7,7 @@ import com.rockthejvm.reviewboard.testdata.ReviewTestDataSpec
 import zio.{Scope, Task, ZIO, ZLayer}
 import zio.test.{assertTrue, Spec, TestEnvironment, ZIOSpecDefault}
 
-object ReviewServiceTestDataSpec extends ZIOSpecDefault with ReviewTestDataSpec {
+object ReviewServiceSpec extends ZIOSpecDefault with ReviewTestDataSpec {
 
   val stubRepo: ZLayer[Any, Nothing, ReviewRepository] = ZLayer.succeed {
     new ReviewRepository {
