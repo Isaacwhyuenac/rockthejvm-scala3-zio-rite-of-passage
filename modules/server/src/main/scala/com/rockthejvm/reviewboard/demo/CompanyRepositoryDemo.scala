@@ -1,4 +1,4 @@
-package com.rockthejvm.reviewboard
+package com.rockthejvm.reviewboard.demo
 
 import com.rockthejvm.reviewboard.domain.data.Company
 import com.rockthejvm.reviewboard.repositories.{CompanyRepository, CompanyRepositoryLive}
