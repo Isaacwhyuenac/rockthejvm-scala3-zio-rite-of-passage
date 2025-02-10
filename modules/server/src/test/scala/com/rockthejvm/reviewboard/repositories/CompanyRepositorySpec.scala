@@ -7,7 +7,6 @@ import zio.test.{assertZIO, Assertion, Spec, TestEnvironment, ZIOSpecDefault}
 
 import java.sql.SQLException
 import javax.sql.DataSource
-import scala.annotation.nowarn
 
 object CompanyRepositorySpec extends ZIOSpecDefault with RepositorySpec with CompanyTestDataSpec {
 

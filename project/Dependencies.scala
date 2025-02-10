@@ -6,6 +6,17 @@ object Dependencies {
   val opentelemetryVersion = "1.47.0"
   val micrometerVersion    = "2.3.1"
 
+  val zio = Seq(
+  )
+
+  val zioJson = Seq(
+
+  )
+
+  val tapir = Seq(
+
+  )
+
   val openTelemetry = Seq(
     // Zio Telemetry
     "dev.zio" %% "zio-opentelemetry"             % zioTelemetryVersion,

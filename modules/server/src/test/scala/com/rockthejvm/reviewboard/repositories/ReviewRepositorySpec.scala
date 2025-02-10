@@ -5,9 +5,6 @@ import com.rockthejvm.reviewboard.repositories.CompanyRepositorySpec.dataSourceL
 import com.rockthejvm.reviewboard.testdata.ReviewTestDataSpec
 import zio.test.{assertTrue, assertZIO, Assertion, Spec, TestEnvironment, ZIOSpecDefault}
 import zio.{Scope, ZIO}
-import zio.durationLong
-
-import java.time.Instant
 
 object ReviewRepositorySpec extends ZIOSpecDefault with RepositorySpec with ReviewTestDataSpec {
 

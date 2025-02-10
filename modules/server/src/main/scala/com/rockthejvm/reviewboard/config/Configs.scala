@@ -8,12 +8,15 @@ import zio.config.magnolia.{deriveConfig, DeriveConfig}
 
 object Configs {
 
-  def makeConfig[T: {Tag, DeriveConfig}](propertyPath: String): ZIO[Any, Throwable, T] = {
+  def makeConfig[T: {Tag, DeriveConfig}](
+      filepath: String = "application.conf"
+  )(propertyPath: String): ZIO[Any, Throwable, T] = {
     config.read(
-      deriveConfig[T] from ConfigProvider.fromTypesafeConfig(ConfigFactory.load("application.conf").getConfig(propertyPath))
+      deriveConfig[T] from ConfigProvider.fromTypesafeConfig(ConfigFactory.load(filepath).getConfig(propertyPath))
     )
   }
 
-  def makeConfigLayer[T: {Tag, DeriveConfig}](propertyPath: String) = ZLayer.fromZIO(makeConfig(propertyPath))
+  def makeConfigLayer[T: {Tag, DeriveConfig}](filepath: String = "application.conf")(propertyPath: String) =
+    ZLayer.fromZIO(makeConfig[T](filepath)(propertyPath))
 
 }

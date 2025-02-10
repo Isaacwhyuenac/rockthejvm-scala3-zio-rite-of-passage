@@ -1,8 +1,14 @@
 package com.rockthejvm.reviewboard
 
+import com.rockthejvm.reviewboard.config.{Configs, JWTConfig}
 import com.rockthejvm.reviewboard.http.HttpApi
-import com.rockthejvm.reviewboard.repositories.{CompanyRepositoryLive, Repository, ReviewRepositoryLive}
-import com.rockthejvm.reviewboard.services.{CompanyServiceLive, ReviewServiceLive}
+import com.rockthejvm.reviewboard.repositories.{
+  CompanyRepositoryLive,
+  Repository,
+  ReviewRepositoryLive,
+  UserRepositoryLive
+}
+import com.rockthejvm.reviewboard.services.{CompanyServiceLive, JWTServiceLive, ReviewServiceLive, UserServiceLive}
 import io.micrometer.prometheusmetrics.{PrometheusConfig, PrometheusMeterRegistry}
 import io.opentelemetry.api
 import io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppender
@@ -35,13 +41,19 @@ object Application extends ZIOAppDefault {
     serverProgram.provide(
       Server.default,
       Repository.dataLayer,
+      // config layer
+      Configs.makeConfigLayer[JWTConfig]()("rockthejvm.jwt"),
+
       // services
       CompanyServiceLive.layer,
       ReviewServiceLive.layer,
+      UserServiceLive.layer,
+      JWTServiceLive.layer,
 
       // repositories
       CompanyRepositoryLive.layer,
       ReviewRepositoryLive.layer,
+      UserRepositoryLive.layer,
 
       // OTEL
       opentelemetry.OpenTelemetry.global,
@@ -53,7 +65,7 @@ object Application extends ZIOAppDefault {
       ZLayer.succeed(MicrometerConfig.default),
       micrometer.micrometerLayer,
       zio.Runtime.enableRuntimeMetrics,
-      DefaultJvmMetrics.live.unit,
+      DefaultJvmMetrics.live.unit
     )
 
 }

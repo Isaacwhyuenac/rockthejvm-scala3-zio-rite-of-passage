@@ -1,7 +1,6 @@
 package com.rockthejvm.reviewboard.services
 
 import com.rockthejvm.reviewboard.config.JWTConfig
-import com.rockthejvm.reviewboard.domain.data.User
 import com.rockthejvm.reviewboard.testdata.UserTestDataSpec
 import zio.{Scope, ZIO, ZLayer}
 import zio.test.{assertTrue, Spec, TestEnvironment, ZIOSpecDefault}

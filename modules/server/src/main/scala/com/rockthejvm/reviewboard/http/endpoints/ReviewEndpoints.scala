@@ -2,7 +2,7 @@ package com.rockthejvm.reviewboard.http.endpoints
 
 import com.rockthejvm.reviewboard.domain.data.Review
 import com.rockthejvm.reviewboard.http.requests.CreateReviewRequest
-import sttp.tapir.{endpoint, path, stringToPath, Endpoint}
+import sttp.tapir.{path, stringToPath}
 import sttp.tapir.json.zio.jsonBody
 import sttp.tapir.generic.auto.schemaForCaseClass
 

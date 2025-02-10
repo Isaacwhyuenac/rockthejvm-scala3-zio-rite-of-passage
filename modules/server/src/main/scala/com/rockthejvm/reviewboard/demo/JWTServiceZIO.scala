@@ -19,6 +19,6 @@ object JWTServiceZIO extends ZIOAppDefault {
       .provide(
         JWTServiceLive.layer,
 //        ZLayer.succeed(JWTConfig("secret", 30 * 24 * 60, "issuer"))
-        ZLayer.fromZIO(Configs.makeConfig[JWTConfig]("rockthejvm.jwt"))
+        ZLayer.fromZIO(Configs.makeConfig[JWTConfig]()("rockthejvm.jwt"))
       )
 }
