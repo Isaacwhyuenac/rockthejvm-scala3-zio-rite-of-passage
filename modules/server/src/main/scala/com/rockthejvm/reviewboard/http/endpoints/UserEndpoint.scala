@@ -30,7 +30,7 @@ trait UserEndpoint extends BaseEndpoint {
     .name("update password")
     .description("Update the password of a user account")
     .in("users" / "password")
-    .post
+    .put
     .in(jsonBody[UpdatePasswordRequest])
     .out(jsonBody[UserResponse])
 
