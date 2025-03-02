@@ -1,14 +1,15 @@
 package com.rockthejvm.reviewboard.core
 
+import zio.*
 import com.rockthejvm.reviewboard.config.BackendClientConfig
 import com.rockthejvm.reviewboard.http.endpoints.CompanyEndpoints
 import sttp.capabilities
 import sttp.capabilities.WebSockets
 import sttp.capabilities.zio.ZioStreams
-import sttp.client3.{Request, SttpBackend, UriContext}
+import sttp.client3.*
+import sttp.client3.impl.zio.FetchZioBackend
 import sttp.tapir.Endpoint
 import sttp.tapir.client.sttp.SttpClientInterpreter
-import zio.Task
 
 trait BackendClient {
   val company: CompanyEndpoints
@@ -38,22 +39,23 @@ class BackendClientLive(
 }
 
 object BackendClientLive {
-//  val layer = ZLayer {
-//    for {
-//      backend     <- ZIO.service[SttpBackend[Task, ZioStreams & capabilities.WebSockets]]
-//      interpreter <- ZIO.service[SttpClientInterpreter]
-//      config      <- ZIO.service[BackendClientConfig]
-//    } yield new BackendClientLive(backend, interpreter, config)
-//  }
-//
-//  val configuredLayer = {
-//    val backend     = FetchZioBackend()
-//    val interpreter = SttpClientInterpreter()
-//    val config      = BackendClientConfig(Some(uri"http://localhost:8080"))
-//
-//    ZLayer.succeed(backend)
-//      ++ ZLayer.succeed(interpreter)
-//      ++ ZLayer.succeed(config)
-//      >>> layer
-//  }
+
+  def layer = ZLayer {
+    for {
+      backend     <- ZIO.service[SttpBackend[Task, ZioStreams & WebSockets]]
+      interpreter <- ZIO.service[SttpClientInterpreter]
+      config      <- ZIO.service[BackendClientConfig]
+    } yield new BackendClientLive(backend, interpreter, config)
+  }
+
+  val configuredLayer = {
+    val backend     = FetchZioBackend()
+    val interpreter = SttpClientInterpreter()
+    val config      = BackendClientConfig(Some(uri"http://localhost:8080"))
+
+    ZLayer.succeed(backend)
+      ++ ZLayer.succeed(interpreter)
+      ++ ZLayer.succeed(config)
+      >>> layer
+  }
 }

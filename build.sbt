@@ -94,5 +94,5 @@ lazy val root = (project in file("."))
   .settings(
     name := "zio-rite-of-passage"
   )
-  .aggregate(app, server)
-  .dependsOn(app, server)
+  .aggregate(server, app)
+  .dependsOn(server, app)
