@@ -25,11 +25,11 @@ trait UserRepository {
 }
 
 class UserRepositoryLive private (quill: Quill.Postgres[SnakeCase]) extends UserRepository {
-  import quill._
+  import quill.*
 
-  inline given schema: SchemaMeta[User]         = schemaMeta[User]("users")
-  inline given userInsertMeta: InsertMeta[User] = insertMeta[User](_.id)
-  inline given userUpdateMeta: UpdateMeta[User] = updateMeta[User](_.id)
+  inline given SchemaMeta[User] = schemaMeta[User]("users")
+  inline given InsertMeta[User] = insertMeta[User](_.id)
+  inline given UpdateMeta[User] = updateMeta[User](_.id)
 
   override def create(user: User): Task[User] =
     run {

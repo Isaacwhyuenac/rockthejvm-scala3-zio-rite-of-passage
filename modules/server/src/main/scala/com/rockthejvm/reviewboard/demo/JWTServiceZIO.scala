@@ -14,7 +14,7 @@ object JWTServiceZIO extends ZIOAppDefault {
     _         <- zio.Console.printLine(s"User ID: $userId")
   } yield ()
 
-  override def run: ZIO[Any with ZIOAppArgs with Scope, Any, Any] =
+  override def run: ZIO[Any & ZIOAppArgs & Scope, Any, Any] =
     program
       .provide(
         JWTServiceLive.layer,

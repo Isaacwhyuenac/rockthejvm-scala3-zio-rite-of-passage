@@ -1,26 +1,23 @@
 package com.rockthejvm.reviewboard.integration
 
-import com.rockthejvm.reviewboard.config.JWTConfig
+import com.rockthejvm.reviewboard.config.{JWTConfig, RecoveryTokensConfig}
 import com.rockthejvm.reviewboard.domain.data.UserToken
 import com.rockthejvm.reviewboard.http.controllers.UserController
-import com.rockthejvm.reviewboard.http.requests.{
-  DeleteAccountRequest,
-  LoginRequest,
-  RegisterUserAccount,
-  UpdatePasswordRequest
-}
+import com.rockthejvm.reviewboard.http.requests.{DeleteAccountRequest, ForgotPasswordRequest, LoginRequest, RecoverPasswordRequest, RegisterUserAccount, UpdatePasswordRequest}
 import com.rockthejvm.reviewboard.http.responses.UserResponse
-import com.rockthejvm.reviewboard.repositories.{Repository, RepositorySpec, UserRepository, UserRepositoryLive}
-import com.rockthejvm.reviewboard.services.{JWTService, JWTServiceLive, UserService, UserServiceLive}
-import sttp.client3.{basicRequest, SttpBackend, UriContext}
+import com.rockthejvm.reviewboard.repositories.{RecoveryTokensRepositoryLive, Repository, RepositorySpec, UserRepository, UserRepositoryLive}
+import com.rockthejvm.reviewboard.services.{EmailService, JWTService, JWTServiceLive, UserService, UserServiceLive}
+import sttp.client3.{SttpBackend, UriContext, basicRequest}
 import sttp.client3.testing.SttpBackendStub
 import sttp.model.Method
 import sttp.monad.MonadError
 import sttp.tapir.server.stub.TapirStubInterpreter
 import sttp.tapir.ztapir.RIOMonadError
 import zio.{Scope, Task, ZIO, ZLayer}
-import zio.test.{assertTrue, Spec, TestEnvironment, ZIOSpecDefault}
+import zio.test.{Spec, TestEnvironment, ZIOSpecDefault, assertTrue}
 import zio.json.{DecoderOps, EncoderOps, JsonCodec}
+
+import scala.collection.mutable
 
 object UserFlowSpec extends ZIOSpecDefault with RepositorySpec {
   private val EMAIL    = "daniel@rockthejvm.com"
@@ -65,13 +62,32 @@ object UserFlowSpec extends ZIOSpecDefault with RepositorySpec {
     def post[B: JsonCodec](path: String, payload: A, maybeToken: Option[String] = None): Task[Option[B]] =
       sendRequest(Method.POST, path, payload, maybeToken)
 
+    def postNoResponse(path: String, payload: A): Task[Unit] =
+      basicRequest
+        .method(Method.POST, uri"$path")
+        .body(payload.toJson)
+        .send(backend)
+        .unit
+
     def put[B: JsonCodec](path: String, payload: A, maybeToken: Option[String] = None): Task[Option[B]] =
       sendRequest(Method.PUT, path, payload, maybeToken)
 
     def delete[B: JsonCodec](path: String, payload: A, maybeToken: Option[String] = None): Task[Option[B]] =
       sendRequest(Method.DELETE, path, payload, maybeToken)
 
-  override def spec: Spec[TestEnvironment with Scope, Any] =
+  class EmailServiceProbe extends EmailService {
+    val db = mutable.Map[String, String]()
+
+    override def sendEmail(to: String, subject: String, content: String): Task[Unit] = ZIO.unit
+
+    override def sendPasswordRecoveryEmail(to: String, token: String): Task[Unit] = ZIO.succeed(db += (to -> token))
+
+    def probeToken(email: String): Task[Option[String]] = ZIO.succeed(db.get(email))
+  }
+
+  val stubEmailServiceLayer: ZLayer[Any, Nothing, EmailServiceProbe] = ZLayer.succeed(new EmailServiceProbe)
+
+  override def spec: Spec[TestEnvironment & Scope, Any] =
     suite("UserFlowSpec")(
       test("basic test") {
         for {
@@ -131,17 +147,45 @@ object UserFlowSpec extends ZIOSpecDefault with RepositorySpec {
             )
           maybeUser <- userRepository.getByEmail(EMAIL)
         } yield assertTrue(
-          maybeOldUser.filter(_.email == EMAIL).nonEmpty && maybeUser.isEmpty
+          maybeOldUser.exists(_.email == EMAIL) && maybeUser.isEmpty
         )
+      },
+      test("recover password flow") {
+        for {
+          backendStub <- backendStubZIO
+          _ <- backendStub
+            .post[UserResponse]("/users", RegisterUserAccount(EMAIL, PASSWORD))
+
+          // trigger recover password flow
+          _ <- backendStub
+            .postNoResponse("/users/forgot", ForgotPasswordRequest(EMAIL))
+          emailServiceProbe <- ZIO.service[EmailServiceProbe]
+          token <- emailServiceProbe
+            .probeToken(EMAIL)
+            .someOrFail(new RuntimeException("token was not emailed"))
+          _ <- backendStub.postNoResponse(
+            "/users/recover",
+            RecoverPasswordRequest(EMAIL, token, "scalarulez")
+          )
+          maybeOldToken <- backendStub
+            .post[UserToken]("/users/login", LoginRequest(EMAIL, PASSWORD))
+          maybeNewToken <- backendStub
+            .post[UserToken]("/users/login", LoginRequest(EMAIL, "scalarulez"))
+        } yield assertTrue {
+          maybeOldToken.isEmpty && maybeNewToken.nonEmpty
+        }
       }
     )
       .provide(
         UserServiceLive.layer,
         JWTServiceLive.layer,
         UserRepositoryLive.layer,
+        RecoveryTokensRepositoryLive.layer,
         Repository.quillLayer,
         dataSourceLayer,
         ZLayer.succeed(JWTConfig("secret", 3600, "rockthejvm.com")),
+        ZLayer.succeed(RecoveryTokensConfig(24 * 3600)),
+        stubEmailServiceLayer,
         Scope.default
       )
 

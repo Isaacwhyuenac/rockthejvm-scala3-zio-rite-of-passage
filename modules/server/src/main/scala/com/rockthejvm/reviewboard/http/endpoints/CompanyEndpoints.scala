@@ -7,7 +7,7 @@ import sttp.tapir.{Endpoint, endpoint, path, stringToPath}
 import sttp.tapir.generic.auto.schemaForCaseClass
 
 trait CompanyEndpoints extends BaseEndpoint {
-  val createEndpoint = baseEndpoint
+  val createEndpoint = secureBaseEndpoint
     .tag("companies")
     .name("create")
     .description("Create a company")

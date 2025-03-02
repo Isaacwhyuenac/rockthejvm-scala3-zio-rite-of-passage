@@ -10,7 +10,7 @@ trait ReviewEndpoints extends BaseEndpoint {
   // post /reviews { CreateReviewRequest } => create review
   // return Review
 
-  val createEndpoint = baseEndpoint
+  val createEndpoint = secureBaseEndpoint
     .tag("Reviews")
     .name("create")
     .description("Create a review")

@@ -1,10 +1,10 @@
 package com.rockthejvm.reviewboard.services
 
-import com.rockthejvm.reviewboard.domain.data.Company
+import com.rockthejvm.reviewboard.domain.data.{Company, User, UserID, UserToken}
 import com.rockthejvm.reviewboard.http.requests.CreateCompanyRequest
 import com.rockthejvm.reviewboard.repositories.CompanyRepository
 import zio.{Scope, Task, ZIO, ZLayer}
-import zio.test.{assertZIO, Assertion, Spec, TestEnvironment, ZIOSpecDefault}
+import zio.test.{Assertion, Spec, TestEnvironment, ZIOSpecDefault, assertZIO}
 
 import scala.collection.mutable
 
@@ -48,9 +48,16 @@ object CompanyServiceSpec extends ZIOSpecDefault {
       ZIO.succeed(db.values.toList)
   })
 
-  override def spec: Spec[TestEnvironment with Scope, Any] =
+  private val jwtServiceStub = new JWTService {
+    override def createToken(user: User): Task[UserToken] =
+      ZIO.succeed(UserToken(user.email, "ALL_IS_GOOD", Long.MaxValue))
+
+    override def verifyToken(token: String): Task[UserID] = ZIO.succeed(UserID(1, "daniel@rockthejvm.com"))
+  }
+
+  override def spec: Spec[TestEnvironment & Scope, Any] =
     suite("CompanyServiceSpec")(
-      test("create") {
+      test("post company") {
         val companyZIO: ZIO[CompanyService, Throwable, Company] =
           service(_.create(CreateCompanyRequest("Rock the JVM", "rockthejvm.com")))
 
@@ -124,6 +131,6 @@ object CompanyServiceSpec extends ZIOSpecDefault {
         )
       }
     )
-      .provide(CompanyServiceLive.layer, stubRepository)
+      .provide(CompanyServiceLive.layer, stubRepository, ZLayer.succeed(jwtServiceStub))
 
 }

@@ -2,7 +2,7 @@ package com.rockthejvm.reviewboard.services
 
 import com.auth0.jwt.JWTVerifier.BaseVerification
 import com.auth0.jwt.algorithms.Algorithm
-import com.rockthejvm.reviewboard.config.JWTConfig
+import com.rockthejvm.reviewboard.config.{Configs, JWTConfig}
 import com.rockthejvm.reviewboard.domain.data.{User, UserID, UserToken}
 import zio.{Task, ZIO, ZLayer}
 
@@ -55,4 +55,7 @@ object JWTServiceLive {
       javaClock <- zio.Clock.javaClock
     } yield new JWTServiceLive(jwtConfig, javaClock)
   }
+
+  val configuredLayer = Configs.makeConfigLayer[JWTConfig]()("rockthejvm.jwt") >>> layer
+
 }

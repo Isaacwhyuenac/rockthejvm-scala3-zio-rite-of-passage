@@ -2,8 +2,8 @@ package com.rockthejvm.reviewboard.http.requests
 
 import zio.json.JsonCodec
 
-final case class UpdatePasswordRequest(
+case class RecoverPasswordRequest(
     email: String,
-    oldPassword: String,
+    token: String,
     newPassword: String
 ) derives JsonCodec

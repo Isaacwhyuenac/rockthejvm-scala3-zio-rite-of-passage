@@ -1,7 +1,7 @@
 package com.rockthejvm.reviewboard.services
 
 import com.rockthejvm.reviewboard.domain.data.{User, UserToken}
-import com.rockthejvm.reviewboard.repositories.UserRepository
+import com.rockthejvm.reviewboard.repositories.{RecoveryTokensRepository, UserRepository}
 import com.rockthejvm.reviewboard.utils.Hasher
 import zio.{Task, ZIO, ZLayer}
 
@@ -12,9 +12,18 @@ trait UserService {
   def deleteUser(email: String, password: String): Task[User]
   // JWT
   def generateToken(email: String, password: String): Task[Option[UserToken]]
+
+  // password recovery flow
+  def sendPasswordRecoveryToken(email: String): Task[Unit]
+  def recoverPasswordFromToken(email: String, token: String, newPassword: String): Task[Boolean]
 }
 
-class UserServiceLive private (jwtService: JWTService, userRepo: UserRepository) extends UserService {
+class UserServiceLive private (
+    jwtService: JWTService,
+    emailService: EmailService,
+    userRepo: UserRepository,
+    tokensRepo: RecoveryTokensRepository
+) extends UserService {
   override def registerUser(email: String, password: String): Task[User] =
     for {
       user <- userRepo.create(User(0, email, Hasher.generateHash(password)))
@@ -63,14 +72,37 @@ class UserServiceLive private (jwtService: JWTService, userRepo: UserRepository)
       maybeToken    <- jwtService.createToken(existingUser).when(validPassword)
     } yield maybeToken
 
+  // Password recovery flow
+  override def sendPasswordRecoveryToken(email: String): Task[Unit] =
+    for {
+      maybeToken <- tokensRepo.getToken(email)
+      resp <- maybeToken match {
+        case Some(token) => emailService.sendPasswordRecoveryEmail(email, token)
+        case None        => ZIO.unit
+      }
+    } yield resp
+    // get a token from the tokenRepo
+    // email the token to the email
+
+  override def recoverPasswordFromToken(email: String, token: String, newPassword: String): Task[Boolean] =
+    for {
+      existingUser <- userRepo.getByEmail(email).someOrFail(new RuntimeException("Non-existent user"))
+
+      tokenIsValid <- tokensRepo.checkToken(email, token)
+      result <- userRepo
+        .update(existingUser.id, user => user.copy(hashedPassword = Hasher.generateHash(newPassword)))
+        .when(tokenIsValid)
+    } yield result.nonEmpty
 }
 
 object UserServiceLive {
   val layer = ZLayer {
     for {
-      jwtService <- ZIO.service[JWTService]
-      repo       <- ZIO.service[UserRepository]
-    } yield new UserServiceLive(jwtService, repo)
+      jwtService   <- ZIO.service[JWTService]
+      emailService <- ZIO.service[EmailService]
+      repo         <- ZIO.service[UserRepository]
+      tokensRepo   <- ZIO.service[RecoveryTokensRepository]
+    } yield new UserServiceLive(jwtService, emailService, repo, tokensRepo)
   }
 
 }

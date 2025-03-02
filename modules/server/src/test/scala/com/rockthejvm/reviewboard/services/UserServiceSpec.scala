@@ -1,7 +1,7 @@
 package com.rockthejvm.reviewboard.services
 
 import com.rockthejvm.reviewboard.domain.data.{User, UserID, UserToken}
-import com.rockthejvm.reviewboard.repositories.UserRepository
+import com.rockthejvm.reviewboard.repositories.{RecoveryTokensRepository, UserRepository}
 import com.rockthejvm.reviewboard.services.UserServiceSpec.test
 import com.rockthejvm.reviewboard.testdata.UserTestDataSpec
 import zio.{Scope, Task, ZIO, ZLayer}
@@ -45,10 +45,39 @@ object UserServiceSpec extends ZIOSpecDefault with UserTestDataSpec {
   val stubJwtLayer = ZLayer.succeed {
     new JWTService {
       override def createToken(user: User): Task[UserToken] =
-        ZIO.succeed(UserToken(user.email, "BIG ACCESS", Long.MaxValue))
+        ZIO.succeed(UserToken(user.email, "ALL_IS_GOOD", Long.MaxValue))
 
       override def verifyToken(token: String): Task[UserID] =
         ZIO.succeed(UserID(goodUser.id, goodUser.email))
+    }
+  }
+
+  val stubEmailServiceLayer = ZLayer.succeed {
+    new EmailService {
+      override def sendEmail(email: String, subject: String, content: String): Task[Unit] =
+        ZIO.unit
+
+      override def sendPasswordRecoveryEmail(to: String, token: String): Task[Unit] = ZIO.unit
+    }
+  }
+
+  val stubRecoveryTokensRepoLayer = ZLayer.succeed {
+    new RecoveryTokensRepository {
+      val db = mutable.Map[String, String]()
+
+      override def getToken(email: String): Task[Option[String]] =
+        for {
+          _     <- zio.test.TestRandom.feedStrings("test-token")
+          token <- zio.Random.nextString(8)
+          _ <- ZIO.attempt {
+            db += (email -> token)
+          }
+        } yield Some(token)
+
+      override def checkToken(email: String, token: String): Task[Boolean] =
+        ZIO.succeed {
+          db.get(email).contains(token)
+        }
     }
   }
 
@@ -109,6 +138,8 @@ object UserServiceSpec extends ZIOSpecDefault with UserTestDataSpec {
       .provide(
         UserServiceLive.layer,
         stubRepoLayer,
-        stubJwtLayer
+        stubJwtLayer,
+        stubEmailServiceLayer,
+        stubRecoveryTokensRepoLayer
       )
 }

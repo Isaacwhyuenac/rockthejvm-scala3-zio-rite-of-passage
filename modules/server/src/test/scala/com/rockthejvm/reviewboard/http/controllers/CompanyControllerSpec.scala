@@ -1,14 +1,14 @@
 package com.rockthejvm.reviewboard.http.controllers
 
-import com.rockthejvm.reviewboard.domain.data.Company
+import com.rockthejvm.reviewboard.domain.data.{Company, User, UserID, UserToken}
 import com.rockthejvm.reviewboard.http.requests.CreateCompanyRequest
-import com.rockthejvm.reviewboard.services.CompanyService
+import com.rockthejvm.reviewboard.services.{CompanyService, JWTService}
 import com.rockthejvm.reviewboard.syntax.assert
 import com.rockthejvm.reviewboard.testdata.CompanyTestDataSpec
-import sttp.client3.{SttpBackend, UriContext, basicRequest}
+import sttp.client3.{basicRequest, SttpBackend, UriContext}
 import zio.{Scope, Task, ZIO, ZLayer}
 import zio.json.{DecoderOps, EncoderOps}
-import zio.test.{Assertion, Spec, TestEnvironment, ZIOSpecDefault, assertZIO}
+import zio.test.{assertZIO, Assertion, Spec, TestEnvironment, ZIOSpecDefault}
 import sttp.tapir.server.stub.TapirStubInterpreter
 import sttp.client3.testing.SttpBackendStub
 import sttp.monad.MonadError
@@ -37,9 +37,16 @@ object CompanyControllerSpec extends ZIOSpecDefault with CompanyTestDataSpec {
     }
   }
 
+  private val jwtServiceStub = new JWTService {
+    override def createToken(user: User): Task[UserToken] =
+      ZIO.succeed(UserToken(user.email, "ALL_IS_GOOD", Long.MaxValue))
+
+    override def verifyToken(token: String): Task[UserID] = ZIO.succeed(UserID(1, "daniel@rockthejvm.com"))
+  }
+
   private def backendStubZIO(
       endpointFn: CompanyController => ServerEndpoint[Any, Task]
-  ): ZIO[CompanyService, Nothing, SttpBackend[Task, Any]] =
+  ) =
     for {
       /// create the controller
       companyController <- CompanyController.makeZIO
@@ -59,6 +66,7 @@ object CompanyControllerSpec extends ZIOSpecDefault with CompanyTestDataSpec {
         // run client request
         response <- basicRequest
           .post(uri"/companies")
+          .header("Authorization", "Bearer ALL_IS_GOOD")
           .body(CreateCompanyRequest("Rock the JVM", "rockthejvm.com").toJson)
           .send(backendStub)
       } yield response.body
@@ -116,6 +124,6 @@ object CompanyControllerSpec extends ZIOSpecDefault with CompanyTestDataSpec {
       )
     }
   )
-    .provide(ZLayer.succeed(serviceStub))
+    .provide(ZLayer.succeed(serviceStub), ZLayer.succeed(jwtServiceStub))
 
 }

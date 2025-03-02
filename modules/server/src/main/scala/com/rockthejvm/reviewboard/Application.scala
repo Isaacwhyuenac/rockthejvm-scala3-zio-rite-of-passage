@@ -1,14 +1,21 @@
 package com.rockthejvm.reviewboard
 
-import com.rockthejvm.reviewboard.config.{Configs, JWTConfig}
+import com.rockthejvm.reviewboard.config.{Configs, JWTConfig, RecoveryTokensConfig}
 import com.rockthejvm.reviewboard.http.HttpApi
 import com.rockthejvm.reviewboard.repositories.{
   CompanyRepositoryLive,
+  RecoveryTokensRepositoryLive,
   Repository,
   ReviewRepositoryLive,
   UserRepositoryLive
 }
-import com.rockthejvm.reviewboard.services.{CompanyServiceLive, JWTServiceLive, ReviewServiceLive, UserServiceLive}
+import com.rockthejvm.reviewboard.services.{
+  CompanyServiceLive,
+  EmailServiceLive,
+  JWTServiceLive,
+  ReviewServiceLive,
+  UserServiceLive
+}
 import io.micrometer.prometheusmetrics.{PrometheusConfig, PrometheusMeterRegistry}
 import io.opentelemetry.api
 import io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppender
@@ -37,23 +44,26 @@ object Application extends ZIOAppDefault {
     _ <- zio.Console.printLine("Rock the JVM!")
   } yield ()
 
-  override def run: ZIO[Any with ZIOAppArgs with Scope, Any, Any] =
+  override def run: ZIO[Any & ZIOAppArgs & Scope, Any, Any] =
     serverProgram.provide(
       Server.default,
       Repository.dataLayer,
       // config layer
-      Configs.makeConfigLayer[JWTConfig]()("rockthejvm.jwt"),
+//      Configs.makeConfigLayer[JWTConfig]()("rockthejvm.jwt"),
+//      Configs.makeConfigLayer[RecoveryTokensConfig]()("recovery-tokens"),
 
       // services
       CompanyServiceLive.layer,
       ReviewServiceLive.layer,
       UserServiceLive.layer,
-      JWTServiceLive.layer,
+      JWTServiceLive.configuredLayer,
+      EmailServiceLive.configuredLayer,
 
       // repositories
       CompanyRepositoryLive.layer,
       ReviewRepositoryLive.layer,
       UserRepositoryLive.layer,
+      RecoveryTokensRepositoryLive.configuredLayer,
 
       // OTEL
       opentelemetry.OpenTelemetry.global,
