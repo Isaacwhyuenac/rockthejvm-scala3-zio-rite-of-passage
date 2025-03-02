@@ -1,24 +1,12 @@
 package com.rockthejvm.reviewboard
 
-import com.rockthejvm.reviewboard.config.{Configs, JWTConfig, RecoveryTokensConfig}
 import com.rockthejvm.reviewboard.http.HttpApi
-import com.rockthejvm.reviewboard.repositories.{
-  CompanyRepositoryLive,
-  RecoveryTokensRepositoryLive,
-  Repository,
-  ReviewRepositoryLive,
-  UserRepositoryLive
-}
-import com.rockthejvm.reviewboard.services.{
-  CompanyServiceLive,
-  EmailServiceLive,
-  JWTServiceLive,
-  ReviewServiceLive,
-  UserServiceLive
-}
+import com.rockthejvm.reviewboard.repositories.{CompanyRepositoryLive, RecoveryTokensRepositoryLive, Repository, ReviewRepositoryLive, UserRepositoryLive}
+import com.rockthejvm.reviewboard.services.{CompanyServiceLive, EmailServiceLive, JWTServiceLive, ReviewServiceLive, UserServiceLive}
 import io.micrometer.prometheusmetrics.{PrometheusConfig, PrometheusMeterRegistry}
 import io.opentelemetry.api
 import io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppender
+import sttp.tapir.server.interceptor.cors.CORSInterceptor
 import sttp.tapir.server.ziohttp.{ZioHttpInterpreter, ZioHttpServerOptions}
 import zio.http.Server
 import zio.metrics.connectors.micrometer
@@ -37,7 +25,9 @@ object Application extends ZIOAppDefault {
     _             <- ZIO.attempt(OpenTelemetryAppender.install(openTelemetry))
     _ <- Server.serve(
       ZioHttpInterpreter(
-        ZioHttpServerOptions.default
+        ZioHttpServerOptions.default.appendInterceptor(
+          CORSInterceptor.default
+        )
       ).toHttp(endpoints)
     )
 

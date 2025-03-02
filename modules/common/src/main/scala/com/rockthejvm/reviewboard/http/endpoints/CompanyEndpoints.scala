@@ -16,7 +16,7 @@ trait CompanyEndpoints extends BaseEndpoint {
     .in(jsonBody[CreateCompanyRequest])
     .out(jsonBody[Company])
 
-  val getAllEndpoint = baseEndpoint
+  val getAllEndpoint: Endpoint[Unit, Unit, Throwable, List[Company], Any] = baseEndpoint
     .tag("companies")
     .name("getAll")
     .description("Get all company listings")

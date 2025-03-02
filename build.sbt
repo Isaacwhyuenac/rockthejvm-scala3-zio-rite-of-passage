@@ -75,9 +75,12 @@ lazy val server = (project in file("modules/server"))
 lazy val app = (project in file("modules/app"))
   .settings(
     libraryDependencies ++= Seq(
+      "com.softwaremill.sttp.tapir"   %%% "tapir-sttp-client" % tapirVersion,
+      "com.softwaremill.sttp.tapir"   %%% "tapir-json-zio"    % tapirVersion,
+      "com.softwaremill.sttp.client3" %%% "zio"               % sttpVersion,
       "dev.zio"                       %%% "zio-json"          % "0.4.2",
       "io.frontroute"                 %%% "frontroute"        % "0.18.1" // Brings in Laminar 16
-    ) ++ commonDependencies,
+    ),
     scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) },
     semanticdbEnabled               := true,
     autoAPIMappings                 := true,
