@@ -2,13 +2,13 @@ package com.rockthejvm.reviewboard.core
 
 import com.rockthejvm.reviewboard.config.BackendClientConfig
 import com.rockthejvm.reviewboard.http.endpoints.CompanyEndpoints
+import sttp.capabilities
 import sttp.capabilities.WebSockets
 import sttp.capabilities.zio.ZioStreams
-import sttp.client3.impl.zio.FetchZioBackend
 import sttp.client3.{Request, SttpBackend, UriContext}
 import sttp.tapir.Endpoint
 import sttp.tapir.client.sttp.SttpClientInterpreter
-import zio.{Task, ZIO, ZLayer}
+import zio.Task
 
 trait BackendClient {
   val company: CompanyEndpoints
@@ -34,26 +34,26 @@ class BackendClientLive(
 
   override def endpointRequestZIO[I, E <: Throwable, O](endpoint: Endpoint[Unit, I, E, O, Any])(payload: I): Task[O] =
     backend.send(endpointRequest(endpoint)(payload)).map(_.body).absolve
-    
+
 }
 
 object BackendClientLive {
-  val layer = ZLayer {
-    for {
-      backend     <- ZIO.service[SttpBackend[Task, ZioStreams & WebSockets]]
-      interpreter <- ZIO.service[SttpClientInterpreter]
-      config      <- ZIO.service[BackendClientConfig]
-    } yield new BackendClientLive(backend, interpreter, config)
-  }
-
-  val configuredLayer = {
-    val backend     = FetchZioBackend()
-    val interpreter = SttpClientInterpreter()
-    val config      = BackendClientConfig(Some(uri"http://localhost:8080"))
-
-    ZLayer.succeed(backend)
-      ++ ZLayer.succeed(interpreter)
-      ++ ZLayer.succeed(config)
-      >>> layer
-  }
+//  val layer = ZLayer {
+//    for {
+//      backend     <- ZIO.service[SttpBackend[Task, ZioStreams & capabilities.WebSockets]]
+//      interpreter <- ZIO.service[SttpClientInterpreter]
+//      config      <- ZIO.service[BackendClientConfig]
+//    } yield new BackendClientLive(backend, interpreter, config)
+//  }
+//
+//  val configuredLayer = {
+//    val backend     = FetchZioBackend()
+//    val interpreter = SttpClientInterpreter()
+//    val config      = BackendClientConfig(Some(uri"http://localhost:8080"))
+//
+//    ZLayer.succeed(backend)
+//      ++ ZLayer.succeed(interpreter)
+//      ++ ZLayer.succeed(config)
+//      >>> layer
+//  }
 }

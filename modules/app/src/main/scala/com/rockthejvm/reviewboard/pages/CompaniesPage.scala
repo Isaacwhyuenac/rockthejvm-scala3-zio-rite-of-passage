@@ -3,12 +3,17 @@ package com.rockthejvm.reviewboard.pages
 import com.raquo.laminar.api.L.{*, given}
 import com.rockthejvm.reviewboard.common.Constants
 import com.rockthejvm.reviewboard.components.Anchors
+import com.rockthejvm.reviewboard.config.BackendClientConfig
+import com.rockthejvm.reviewboard.core.BackendClientLive
 import com.rockthejvm.reviewboard.domain.data.Company
 import com.rockthejvm.reviewboard.http.endpoints.CompanyEndpoints
+import com.rockthejvm.reviewboard.core.ZJS.*
+import org.scalajs.dom
+import org.scalajs.dom.console
 import sttp.client3.UriContext
 import sttp.client3.impl.zio.FetchZioBackend
 import sttp.tapir.client.sttp.SttpClientInterpreter
-import zio.{Unsafe, ZIO}
+import zio.{Task, Unsafe, ZIO}
 
 object CompaniesPage {
 
@@ -25,27 +30,12 @@ object CompaniesPage {
   )
 
   val companiesBus = new EventBus[List[Company]]
-  def performBackendCall(): Unit = {
-    val companyEndpoints                   = new CompanyEndpoints {}
-    val getAllEndpoint                     = companyEndpoints.getAllEndpoint
-    val backend                            = FetchZioBackend()
-    val interpreter: SttpClientInterpreter = SttpClientInterpreter()
-    val request = interpreter
-      .toRequestThrowDecodeFailures(getAllEndpoint, Some(uri"http://localhost:8080"))
-      .apply(())
 
-    val companiesZIO = backend
-      .send(request)
-      .map(_.body) // ZIO[Any, Throwable, Either[Throwable, List[Company]]]
-      .absolve     // ZIO[Any, Throwable, List[Company]] put the Either in the error channel to the 2nd type parameter
+  def performBackendCall(): Unit = {
 
     // run the ZIO effect
-
-    Unsafe.unsafe { implicit unsafe =>
-      zio.Runtime.default.unsafe.fork(
-        companiesZIO.tap(list => ZIO.attempt(companiesBus.emit(list)))
-      )
-    }
+    val companiesZIO_v2 = backendCall(_.company.getAllEndpoint(()))
+    companiesZIO_v2.emitTo(companiesBus)
   }
 
   def apply() =
