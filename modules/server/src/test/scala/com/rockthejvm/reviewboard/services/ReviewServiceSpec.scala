@@ -5,7 +5,7 @@ import com.rockthejvm.reviewboard.http.requests.CreateReviewRequest
 import com.rockthejvm.reviewboard.repositories.ReviewRepository
 import com.rockthejvm.reviewboard.testdata.ReviewTestDataSpec
 import zio.{Scope, Task, ZIO, ZLayer}
-import zio.test.{assertTrue, Spec, TestEnvironment, ZIOSpecDefault}
+import zio.test.{Spec, TestEnvironment, ZIOSpecDefault, assertTrue}
 
 object ReviewServiceSpec extends ZIOSpecDefault with ReviewTestDataSpec {
 

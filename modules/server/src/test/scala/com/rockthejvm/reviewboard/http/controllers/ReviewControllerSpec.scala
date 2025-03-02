@@ -4,7 +4,7 @@ import com.rockthejvm.reviewboard.domain.data.{Review, User, UserID, UserToken}
 import com.rockthejvm.reviewboard.http.requests.CreateReviewRequest
 import com.rockthejvm.reviewboard.services.{JWTService, ReviewService}
 import com.rockthejvm.reviewboard.testdata.ReviewTestDataSpec
-import sttp.client3.{basicRequest, SttpBackend, UriContext}
+import sttp.client3.{SttpBackend, UriContext, basicRequest}
 import sttp.client3.testing.SttpBackendStub
 import sttp.monad.MonadError
 import sttp.tapir.server.ServerEndpoint
@@ -12,7 +12,7 @@ import sttp.tapir.server.stub.TapirStubInterpreter
 import sttp.tapir.ztapir.RIOMonadError
 import zio.{Scope, Task, ZIO, ZLayer}
 import zio.json.{DecoderOps, EncoderOps}
-import zio.test.{assertTrue, assertZIO, Assertion, Spec, TestEnvironment, ZIOSpecDefault}
+import zio.test.{Assertion, Spec, TestEnvironment, ZIOSpecDefault, assertTrue, assertZIO}
 
 object ReviewControllerSpec extends ZIOSpecDefault with ReviewTestDataSpec {
 

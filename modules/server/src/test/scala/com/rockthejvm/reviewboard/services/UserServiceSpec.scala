@@ -1,11 +1,10 @@
 package com.rockthejvm.reviewboard.services
 
-import com.rockthejvm.reviewboard.domain.data.{User, UserID, UserToken}
 import com.rockthejvm.reviewboard.repositories.{RecoveryTokensRepository, UserRepository}
 import com.rockthejvm.reviewboard.services.UserServiceSpec.test
 import com.rockthejvm.reviewboard.testdata.UserTestDataSpec
 import zio.{Scope, Task, ZIO, ZLayer}
-import zio.test.{assertTrue, Spec, TestEnvironment, ZIOSpecDefault}
+import zio.test.{Spec, TestEnvironment, ZIOSpecDefault, assertTrue}
 
 import scala.collection.mutable
 

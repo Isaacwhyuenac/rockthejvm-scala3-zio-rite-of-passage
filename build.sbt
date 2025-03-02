@@ -70,6 +70,7 @@ lazy val server = (project in file("modules/server"))
   .settings(
     libraryDependencies ++= serverDependencies
   )
+  .dependsOn(common.jvm)
 
 lazy val app = (project in file("modules/app"))
   .settings(

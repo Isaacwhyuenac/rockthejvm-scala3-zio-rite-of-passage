@@ -5,10 +5,10 @@ import com.rockthejvm.reviewboard.http.requests.CreateCompanyRequest
 import com.rockthejvm.reviewboard.services.{CompanyService, JWTService}
 import com.rockthejvm.reviewboard.syntax.assert
 import com.rockthejvm.reviewboard.testdata.CompanyTestDataSpec
-import sttp.client3.{basicRequest, SttpBackend, UriContext}
+import sttp.client3.{SttpBackend, UriContext, basicRequest}
 import zio.{Scope, Task, ZIO, ZLayer}
 import zio.json.{DecoderOps, EncoderOps}
-import zio.test.{assertZIO, Assertion, Spec, TestEnvironment, ZIOSpecDefault}
+import zio.test.{Assertion, Spec, TestEnvironment, ZIOSpecDefault, assertZIO}
 import sttp.tapir.server.stub.TapirStubInterpreter
 import sttp.client3.testing.SttpBackendStub
 import sttp.monad.MonadError

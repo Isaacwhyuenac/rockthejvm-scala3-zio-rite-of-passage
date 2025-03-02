@@ -3,7 +3,7 @@ package com.rockthejvm.reviewboard.repositories
 import com.rockthejvm.reviewboard.domain.data.Company
 import com.rockthejvm.reviewboard.testdata.CompanyTestDataSpec
 import zio.{Scope, ZIO, ZLayer}
-import zio.test.{assertZIO, Assertion, Spec, TestEnvironment, ZIOSpecDefault}
+import zio.test.{Assertion, Spec, TestEnvironment, ZIOSpecDefault, assertZIO}
 
 import java.sql.SQLException
 import javax.sql.DataSource
