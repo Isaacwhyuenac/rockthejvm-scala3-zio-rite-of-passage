@@ -3,17 +3,8 @@ package com.rockthejvm.reviewboard.pages
 import com.raquo.laminar.api.L.{*, given}
 import com.rockthejvm.reviewboard.common.Constants
 import com.rockthejvm.reviewboard.components.Anchors
-import com.rockthejvm.reviewboard.config.BackendClientConfig
-import com.rockthejvm.reviewboard.core.BackendClientLive
 import com.rockthejvm.reviewboard.domain.data.Company
-import com.rockthejvm.reviewboard.http.endpoints.CompanyEndpoints
-import com.rockthejvm.reviewboard.core.ZJS.*
-import org.scalajs.dom
-import org.scalajs.dom.console
-import sttp.client3.UriContext
-import sttp.client3.impl.zio.FetchZioBackend
-import sttp.tapir.client.sttp.SttpClientInterpreter
-import zio.{Task, Unsafe, ZIO}
+import com.rockthejvm.reviewboard.core.ZJS.{apply, emitTo, useBackend}
 
 object CompaniesPage {
 
@@ -29,13 +20,13 @@ object CompaniesPage {
     List("space", "scala")
   )
 
-  val companiesBus = new EventBus[List[Company]]
+  private val companiesBus = new EventBus[List[Company]]
 
   def performBackendCall(): Unit = {
 
     // run the ZIO effect
-    val companiesZIO_v2 = backendCall(_.company.getAllEndpoint(()))
-    companiesZIO_v2.emitTo(companiesBus)
+    val companiesZIO = useBackend(_.company.getAllEndpoint(()))
+    companiesZIO.emitTo(companiesBus)
   }
 
   def apply() =

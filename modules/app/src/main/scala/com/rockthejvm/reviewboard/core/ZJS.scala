@@ -1,34 +1,29 @@
 package com.rockthejvm.reviewboard.core
 
 import com.raquo.airstream.eventbus.EventBus
-import com.rockthejvm.reviewboard.config.BackendClientConfig
-import sttp.capabilities
-import sttp.capabilities.zio.ZioStreams
-import sttp.client3.*
-import sttp.client3.impl.zio.FetchZioBackend
 import sttp.tapir.Endpoint
-import sttp.tapir.client.sttp.SttpClientInterpreter
-import zio.*
+import zio.{Runtime, Task, Unsafe, ZIO}
 
 object ZJS {
-  val backend: SttpBackend[Task, ZioStreams & capabilities.WebSockets] = FetchZioBackend()
-  val interpreter: SttpClientInterpreter = SttpClientInterpreter()
-  val backendClient = new BackendClientLive(backend, interpreter, BackendClientConfig(Some(uri"http://localhost:8080")))
 
-  def backendCall[A](clientFun: BackendClient => Task[A]): Task[A] =
-    clientFun(backendClient)
+  def useBackend[A](clientFun: BackendClient => Task[A]): ZIO[BackendClient, Throwable, A] =
+    ZIO.serviceWithZIO[BackendClient](clientFun)
 
-  extension [E <: Throwable, A](currentZIO: ZIO[Any, E, A]) {
+  extension [E <: Throwable, A](currentZIO: ZIO[BackendClient, E, A]) {
     def emitTo(eventBus: EventBus[A]) =
       Unsafe.unsafe { implicit unsafe =>
         Runtime.default.unsafe.fork(
-          currentZIO.tap(value => ZIO.attempt(eventBus.emit(value)))
+          currentZIO.tap(value => ZIO.attempt(eventBus.emit(value))).provide(BackendClientLive.configuredLayer)
         )
       }
   }
 
   extension [I, E <: Throwable, O](endpoint: Endpoint[Unit, I, E, O, Any]) {
     def apply(payload: I): Task[O] =
-      backendClient.endpointRequestZIO(endpoint)(payload)
+      (for {
+        backendClient <- ZIO.service[BackendClient]
+        response      <- backendClient.endpointRequestZIO(endpoint)(payload)
+      } yield response)
+        .provide(BackendClientLive.configuredLayer)
   }
 }

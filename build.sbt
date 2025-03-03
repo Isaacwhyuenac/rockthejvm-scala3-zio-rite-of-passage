@@ -9,13 +9,13 @@ ThisBuild / scalacOptions ++= Seq(
 
 ThisBuild / testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
 
-val zioVersion        = "2.1.14"
-val tapirVersion      = "1.11.13"
-val zioLoggingVersion = "2.4.0"
+val zioVersion        = "2.1.16"
+val tapirVersion      = "1.10.15"
+val zioLoggingVersion = "2.5.0"
 val zioConfigVersion  = "4.0.3"
-val sttpVersion       = "3.10.2"
+val sttpVersion       = "3.9.8"
 val javaMailVersion   = "1.6.2"
-val stripeVersion     = "28.3.0"
+val stripeVersion     = "28.4.0"
 
 val commonDependencies = Seq(
   "com.softwaremill.sttp.tapir"   %% "tapir-sttp-client" % tapirVersion,
@@ -31,7 +31,7 @@ val serverDependencies = commonDependencies ++ Seq(
   "com.softwaremill.sttp.tapir" %% "tapir-sttp-stub-server"            % tapirVersion % "test",
   "dev.zio"                     %% "zio-logging"                       % zioLoggingVersion,
   "dev.zio"                     %% "zio-logging-slf4j"                 % zioLoggingVersion,
-  "ch.qos.logback"               % "logback-classic"                   % "1.5.16",
+  "ch.qos.logback"               % "logback-classic"                   % "1.5.17",
   "dev.zio"                     %% "zio-test"                          % zioVersion,
   "dev.zio"                     %% "zio-test-junit"                    % zioVersion   % "test",
   "dev.zio"                     %% "zio-test-sbt"                      % zioVersion   % "test",

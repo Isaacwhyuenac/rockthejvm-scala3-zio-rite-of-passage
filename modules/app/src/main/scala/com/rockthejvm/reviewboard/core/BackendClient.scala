@@ -1,15 +1,15 @@
 package com.rockthejvm.reviewboard.core
 
-import zio.*
 import com.rockthejvm.reviewboard.config.BackendClientConfig
 import com.rockthejvm.reviewboard.http.endpoints.CompanyEndpoints
 import sttp.capabilities
 import sttp.capabilities.WebSockets
 import sttp.capabilities.zio.ZioStreams
-import sttp.client3.*
+import sttp.client3.{Request, SttpBackend, UriContext}
 import sttp.client3.impl.zio.FetchZioBackend
 import sttp.tapir.Endpoint
 import sttp.tapir.client.sttp.SttpClientInterpreter
+import zio.{Task, ZIO, ZLayer}
 
 trait BackendClient {
   val company: CompanyEndpoints
@@ -58,4 +58,5 @@ object BackendClientLive {
       ++ ZLayer.succeed(config)
       >>> layer
   }
+
 }
